@@ -1,8 +1,4 @@
 /**
- * TODO: Warping
- * TODO: Star Collision
- * TODO: Ammo
- * TODO: Fuel
  * TODO: Hyperspace
  */
 
@@ -15,6 +11,7 @@ import java.awt.event.KeyEvent;
 import acm.program.*;
 import acm.graphics.*;
 
+@SuppressWarnings("serial")
 public class Main extends GraphicsProgram {
 	public static final int APPLICATION_WIDTH = 720;
 	public static final int APPLICATION_HEIGHT = 720;
@@ -26,6 +23,8 @@ public class Main extends GraphicsProgram {
 	public Player p1 = new Player(560, 360);
 	public Player p2 = new Player(160, 360);
 
+	public GOval star = new GOval(360, 360, 20, 20);
+
 	public boolean p1Right = false, p1Left = false, p1Thrust = false,
 			p2Right = false, p2Left = false, p2Thrust = false;
 
@@ -36,7 +35,15 @@ public class Main extends GraphicsProgram {
 		p1.angle = -90;
 		p1.dY = -p1.dY;
 		p2.dX = -p2.dX;
-		add(new GOval(360, 360, 20, 20));
+		p1.fuelLabel = new GLabel("P1 Fuel: " + p1.fuel, 10, 10);
+		p2.fuelLabel = new GLabel("P2 Fuel: " + p2.fuel, 550, 10);
+		p1.ammoLabel = new GLabel("P1 Ammo: 0 0 0 0 0 0 0 0 0 0", 10, 650);
+		p2.ammoLabel = new GLabel("P2 Ammo: 0 0 0 0 0 0 0 0 0 0", 550, 650);
+		add(star);
+		add(p1.fuelLabel);
+		add(p2.fuelLabel);
+		add(p1.ammoLabel);
+		add(p2.ammoLabel);
 		addKeyListeners();
 	}
 
@@ -47,9 +54,25 @@ public class Main extends GraphicsProgram {
 			doMovement();
 			moveBullets();
 			checkCollisions();
+			updateLabels();
 			pause(GAME_SPEED);
 
 		}
+	}
+
+	public void updateLabels() {
+		p1.fuelLabel.setLabel("P1 fuel: " + p1.fuel);
+		p2.fuelLabel.setLabel("P2 fuel: " + p2.fuel);
+		p1.ammostring = "";
+		p2.ammostring = "";
+		for (int i = 0; i < p1.ammo; i++) {
+			p1.ammostring = p1.ammostring + "0 ";
+		}
+		for (int i = 0; i < p2.ammo; i++) {
+			p2.ammostring = p2.ammostring + "0 ";
+		}
+		p1.ammoLabel.setLabel("P1 Ammo: " + p1.ammostring);
+		p2.ammoLabel.setLabel("P2 Ammo: " + p2.ammostring);
 	}
 
 	public void doRotation() {
@@ -71,13 +94,15 @@ public class Main extends GraphicsProgram {
 	}
 
 	public void doMovement() {
-		if (p1Thrust) {
+		if (p1Thrust && p1.fuel > 0) {
 			p1.dX += THRUST * Math.cos(Math.toRadians(p1.getAngle()));
 			p1.dY += THRUST * Math.sin(Math.toRadians(p1.getAngle()));
+			p1.fuel--;
 		}
-		if (p2Thrust) {
+		if (p2Thrust && p2.fuel > 0) {
 			p2.dX += THRUST * Math.cos(Math.toRadians(p2.getAngle()));
 			p2.dY += THRUST * Math.sin(Math.toRadians(p2.getAngle()));
+			p2.fuel--;
 		}
 		p1.move(p1.dX, p1.dY);
 		p2.move(p2.dX, p2.dY);
@@ -134,6 +159,13 @@ public class Main extends GraphicsProgram {
 					.contains(p1.bulletlist.get(i).shot.getLocation())) {
 				remove(p2);
 			}
+		}
+		// star
+		if (star.contains(p1.getLocation())) {
+			remove(p1);
+		}
+		if (star.contains(p2.getLocation())) {
+			remove(p2);
 		}
 	}
 
